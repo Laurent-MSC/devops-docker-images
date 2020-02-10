@@ -2,7 +2,7 @@ FROM node:slim
 
 USER root
 
-ARG NWRFC_FILE
+ARG NWRFC_FILE=nwrfc750P_5-70002752.zip
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -10,6 +10,8 @@ ENV SAPDIR=/opt/sap
 ENV SAPBIN=${SAPDIR}/bin
 ENV SAPDATADIR=/var/sap/data
 ENV PATH=${SAPBIN}:$PATH
+ENV SAPNWRFC_HOME=${SAPDIR}/nwrfcsdk
+ENV PATH=${SAPNWRFC_HOME}/lib:$PATH
 
 ADD $NWRFC_FILE /tmp/$NWRFC_FILE
 
@@ -21,7 +23,7 @@ COPY cts ${SAPBIN}/cts
 WORKDIR ${SAPBIN}
 
 RUN apt-get update && \
-    apt-get install -y apt-utils bzip2 unzip && \
+    apt-get install -y apt-utils bzip2 unzip wget ca-certificates && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/* && \
     mkdir -p ${SAPDATADIR} && \
     chown 1000:1000 ${SAPDATADIR} &&\

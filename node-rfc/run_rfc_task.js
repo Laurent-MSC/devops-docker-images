@@ -7,6 +7,7 @@ module.exports = function(grunt) {
 
     // Project specific variables
     var abapDevelopmentUser = process.env.ABAP_DEVELOPMENT_USER;
+    var abapSAPRouter = process.env.ABAP_SAP_ROUTER;
     var abapDevelopmentPassword = process.env.ABAP_DEVELOPMENT_PASSWORD;
     var abapDevelopmentServer = process.env.ABAP_DEVELOPMENT_SERVER;
     var abapDevelopmentInstance = process.env.ABAP_DEVELOPMENT_INSTANCE;
@@ -32,7 +33,8 @@ module.exports = function(grunt) {
         passwd: abapDevelopmentPassword,
         ashost: abapDevelopmentServer,
         sysnr: abapDevelopmentInstance,
-        client: abapDevelopmentClient
+        client: abapDevelopmentClient,
+        saprouter: abapSAPRouter,
     };
     grunt.initConfig({
         pkg: grunt.file.readJSON("package.json"),
