@@ -35,6 +35,7 @@ module.exports = function(grunt) {
         sysnr: abapDevelopmentInstance,
         client: abapDevelopmentClient,
         saprouter: abapSAPRouter,
+        trace: verbose == 'true' ? 3 : 0
     };
     grunt.initConfig({
         pkg: grunt.file.readJSON("package.json"),
@@ -87,7 +88,7 @@ module.exports = function(grunt) {
                             return reject();
                         }
                         client.close();
-                        if(verbose == 'true') {
+                        if (verbose == 'true') {
                             grunt.log.writeln("Result:", res);
                         }
                         return resolve(res);
@@ -106,42 +107,40 @@ module.exports = function(grunt) {
         var done = this.async();
         rfcConnect("BAPI_CTREQUEST_CREATE", importParameters, this)
             .then(
-            function(returnValue) {
-                if  (returnValue.RETURN.TYPE == "E" || returnValue.RETURN.TYPE == "W") {
-                    grunt.log.errorlns("Error invoking BAPI_CTREQUEST_CREATE.");
-                    grunt.log.writeln("Return:", returnValue);
-                    done(false);
-                    return;
-                }
-                if (returnValue.REQUESTID == "") {
-                    grunt.log.errorlns("Error invoking BAPI_CTREQUEST_CREATE.");
-                    grunt.log.errorlns("Transport request could not be created.");
-                    grunt.log.errorlns(returnValue.RETURN.MESSAGE);
-                    done(false);
-                    return;
-                }
-                grunt.log.writeln("Transport request", returnValue.REQUESTID, "created.");
-                if (fs.existsSync(targetDir) === false) {
-                    fs.mkdirSync(targetDir);
-                }
-                fs.writeFile(ctsDataFile,
-                    JSON.stringify(
-                        { REQUESTID: returnValue.REQUESTID }
-                    ),
-                    function(err) {
-                        if (err) {
-                            grunt.log.errorlns("Error Creating file:", err);
-                            done(false);
-                            return;
-                        }
-                        grunt.log.writeln("Created file:", ctsDataFile);
-                        done();
+                function(returnValue) {
+                    if (returnValue.RETURN.TYPE == "E" || returnValue.RETURN.TYPE == "W") {
+                        grunt.log.errorlns("Error invoking BAPI_CTREQUEST_CREATE.");
+                        grunt.log.writeln("Return:", returnValue);
+                        done(false);
+                        return;
                     }
-                )
-            },
-            function() {
-                done(false);
-            });
+                    if (returnValue.REQUESTID == "") {
+                        grunt.log.errorlns("Error invoking BAPI_CTREQUEST_CREATE.");
+                        grunt.log.errorlns("Transport request could not be created.");
+                        grunt.log.errorlns(returnValue.RETURN.MESSAGE);
+                        done(false);
+                        return;
+                    }
+                    grunt.log.writeln("Transport request", returnValue.REQUESTID, "created.");
+                    if (fs.existsSync(targetDir) === false) {
+                        fs.mkdirSync(targetDir);
+                    }
+                    fs.writeFile(ctsDataFile,
+                        JSON.stringify({ REQUESTID: returnValue.REQUESTID }),
+                        function(err) {
+                            if (err) {
+                                grunt.log.errorlns("Error Creating file:", err);
+                                done(false);
+                                return;
+                            }
+                            grunt.log.writeln("Created file:", ctsDataFile);
+                            done();
+                        }
+                    )
+                },
+                function() {
+                    done(false);
+                });
     });
 
     grunt.registerTask("uploadToABAP", "Uploads the application to the ABAP System", function(transportRequest) {
@@ -168,31 +167,31 @@ module.exports = function(grunt) {
         grunt.log.writeln("Uploading application from", url);
         rfcConnect("/UI5/UI5_REPOSITORY_LOAD_HTTP", importParameters, this)
             .then(
-            function(returnValue) {
-                if (returnValue.EV_SUCCESS == "E" || (failUploadOnWarning != "false" && returnValue.EV_SUCCESS == "W")) {
-                    grunt.log.errorlns("Error invoking", "/UI5/UI5_REPOSITORY_LOAD_HTTP");
-                    grunt.log.writeln("Return:", returnValue);
-                    done(false);
-                    return;
-                } else if (returnValue.EV_SUCCESS == 'S') {
+                function(returnValue) {
+                    if (returnValue.EV_SUCCESS == "E" || (failUploadOnWarning != "false" && returnValue.EV_SUCCESS == "W")) {
+                        grunt.log.errorlns("Error invoking", "/UI5/UI5_REPOSITORY_LOAD_HTTP");
+                        grunt.log.writeln("Return:", returnValue);
+                        done(false);
+                        return;
+                    } else if (returnValue.EV_SUCCESS == 'S') {
+                        grunt.log.writeln("Application uploaded.");
+                        done();
+                    } else {
+                        grunt.log.writeln("Invalid return status (EV_SUCCESS): " + returnValue.EV_SUCCESS);
+                        done(false);
+                        return;
+                    }
+                    if (verbose == 'true') {
+                        grunt.log.writeln("Return:", returnValue);
+                    }
+
                     grunt.log.writeln("Application uploaded.");
                     done();
-                } else {
-                    grunt.log.writeln("Invalid return status (EV_SUCCESS): " + returnValue.EV_SUCCESS);
+
+                },
+                function() {
                     done(false);
-                    return;
-                }
-                if(verbose == 'true' ) {
-                    grunt.log.writeln("Return:", returnValue);
-                }
-
-                grunt.log.writeln("Application uploaded.");
-                done();
-
-            },
-            function() {
-                done(false);
-            });
+                });
     });
 
     grunt.registerTask("releaseTransport", "Releases an ABAP Transport Request", function(transportRequest) {
@@ -210,19 +209,19 @@ module.exports = function(grunt) {
         var done = this.async();
         rfcConnect("BAPI_CTREQUEST_RELEASE", importParameters, this)
             .then(
-            function(returnValue) {
-            if (returnValue.RETURN.TYPE == "E" || returnValue.RETURN.TYPE == "W") {
-                    grunt.log.errorlns("Error invoking", "BAPI_CTREQUEST_RELEASE");
-                    grunt.log.writeln("Return:", returnValue);
+                function(returnValue) {
+                    if (returnValue.RETURN.TYPE == "E" || returnValue.RETURN.TYPE == "W") {
+                        grunt.log.errorlns("Error invoking", "BAPI_CTREQUEST_RELEASE");
+                        grunt.log.writeln("Return:", returnValue);
 
+                        done(false);
+                        return;
+                    }
+                    grunt.log.writeln("Transport request released.");
+                    done();
+                },
+                function() {
                     done(false);
-                    return;
-                }
-                grunt.log.writeln("Transport request released.");
-                done();
-            },
-            function() {
-                done(false);
-            });
+                });
     });
 };
