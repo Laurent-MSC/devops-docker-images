@@ -97,6 +97,16 @@ module.exports = function(grunt) {
         });
     };
 
+    var readCtsDataFile = function() {
+        var sContent = fs.readFileSync(ctsDataFile, 'utf8');
+        if (sContent !== null) {
+            sContent = JSON.parse(sContent);
+            grunt.log.writeln(`The request id is ${sContent.REQUESTID}`);
+            return sContent.REQUESTID;
+        } else {
+            return null;
+        }
+    };
 
     grunt.registerTask("createTransportRequest", "Creates an ABAP Transport Request", function() {
         grunt.log.writeln("Creating Transport Request");
@@ -146,8 +156,11 @@ module.exports = function(grunt) {
     grunt.registerTask("uploadToABAP", "Uploads the application to the ABAP System", function(transportRequest) {
         grunt.log.writeln("Uploading to ABAP");
         if (!transportRequest) {
-            grunt.log.errorlns("No Transport request specified.");
-            return (false);
+            transportRequest = readCtsDataFile();
+            if (!transportRequest) {
+                grunt.log.errorlns("No Transport request specified.");
+                return (false);
+            }
         }
         grunt.log.writeln("Transport request:", transportRequest);
         var url = this.options().zipFileURL;
@@ -197,8 +210,11 @@ module.exports = function(grunt) {
     grunt.registerTask("releaseTransport", "Releases an ABAP Transport Request", function(transportRequest) {
         grunt.log.writeln("Releasing Transport Request");
         if (!transportRequest) {
-            grunt.log.errorlns("No Transport request specified.");
-            return (false);
+            transportRequest = readCtsDataFile();
+            if (!transportRequest) {
+                grunt.log.errorlns("No Transport request specified.");
+                return (false);
+            }
         }
         grunt.log.writeln("Transport request:", transportRequest);
         var importParameters = {
